@@ -3,82 +3,51 @@ using System.Threading;
 
 public class Game
 {
-    private string[] field =
-        {
-            "    ABCDEFGHIJ  ",
-            "   ############",
-            " 1 #          #",
-            " 2 #          #",
-            " 3 #          #",
-            " 4 #          #",
-            " 5 #          #",
-            " 6 #          #",
-            " 7 #          #",
-            " 8 #          #",
-            " 9 #          #",
-            "10 #          #",
-            "   ############",
-        };
+    private char[,] field = 
+    {
+        {' ', ' ', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', ' '},
+        {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '},
+        {' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
+        {'A', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'B', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'C', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'D', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'E', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'F', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'G', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'H', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'I', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {'J', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
+        {' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
+    };
+
     private int firstCounter = 10;
     private int secondCounter = 10;
+
+    private int currentPlayer = 0;
+
+    private ConsoleKey[] xKeysArray = {ConsoleKey.A, ConsoleKey.B, ConsoleKey.C, ConsoleKey.D, ConsoleKey.E, ConsoleKey.F, ConsoleKey.G, ConsoleKey.H, ConsoleKey.I, ConsoleKey.J};
+
+    private ConsoleKey[] yKeysArray = {ConsoleKey.D1, ConsoleKey.D2, ConsoleKey.D3, ConsoleKey.D4, ConsoleKey.D5, ConsoleKey.D6, ConsoleKey.D7, ConsoleKey.D8, ConsoleKey.D9, ConsoleKey.D0};
 
     public void GameLoop()
     {
         var fieldParams = CreateFields();
         while (!isEndGame())
         {
-            PlayerTurn(fieldParams);
-            if (isEndGame()) break;
-            EnemyTurn(fieldParams);
+            UpdateFields(fieldParams);
+            CurrentPlayerTurn(fieldParams);
             Console.Clear();
         }
     }
 
-    private bool isEndGame()
-    {
-        if (firstCounter is 0)
-        {
-            EndGame("Enemy", ConsoleColor.Red);
-            return true;
-        }
-        else if (secondCounter is 0)
-        {
-            EndGame("Player", ConsoleColor.DarkBlue);
-            return true;
-        }
-        return false;
-    }
-
-    private void EndGame(string winner, ConsoleColor color)
-    {
-        Console.Clear();
-        Console.ForegroundColor = color;
-        Console.WriteLine(winner + " wins!");
-    }
-
     private (int, int, char[,], char[,]) CreateFields()
     {
-        int fieldWidth = field[0].Length;
-        int fieldHeight = field.Length;
+        int fieldWidth = field.GetLength(0);
+        int fieldHeight = field.GetLength(1);
 
-        char[,] firstField = new char[fieldWidth, fieldHeight];
-        for (int i = 0; i < fieldHeight; i++)
-        {
-            for (int j = 0; j < fieldWidth - 1; j++)
-            {
-                string line = field[i];
-                firstField[j, i] = line[j];
-            }
-        }
-        char[,] secondField = new char[fieldWidth, fieldHeight];
-        for (int i = 0; i < fieldHeight; i++)
-        {
-            for (int j = 0; j < fieldWidth - 1; j++)
-            {
-                string line = field[i];
-                secondField[j, i] = line[j];
-            }
-        }
+        char[,] firstField = (char[,])field.Clone();
+        char[,] secondField = (char[,])field.Clone();
 
         firstField = GenerateShips(firstField);
         Thread.Sleep(10);
@@ -86,8 +55,7 @@ public class Game
 
         DrawFields(fieldHeight, fieldWidth, firstField, secondField, true);
 
-        var result = (fieldHeight, fieldWidth, firstField, secondField);
-        return result;
+        return (fieldHeight, fieldWidth, firstField, secondField);
     }
 
     private char[,] GenerateShips(char[,] field)
@@ -98,7 +66,7 @@ public class Game
 
         for (int i = 0; boatCounter < firstCounter; i++)
         {
-            int randomX = rnd.Next(4, 15);
+            int randomX = rnd.Next(3, 13);
             int randomY = rnd.Next(2, 12);
 
             if (field[randomX, randomY] is ' ')
@@ -119,45 +87,55 @@ public class Game
             {
                 Console.ForegroundColor = ConsoleColor.DarkBlue;
                 Console.Write(firstField[i, j]);
-                if (isAnim)
-                {
-                    Thread.Sleep(10);
-                }
+                if (isAnim) Thread.Sleep(10);
             }
             Console.Write("          ");
 
             for (int i = 0; i < fieldWidth; i++)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                if (secondField[i, j] is '■')
-                {
-                    Console.Write(" ");
-                }
-                else
-                {
-                    Console.Write(secondField[i, j]);
-                }
+                if (secondField[i, j] is '■') Console.Write(" ");
+                else Console.Write(secondField[i, j]);
 
-                if (isAnim)
-                {
-                    Thread.Sleep(10);
-                }
+                if (isAnim) Thread.Sleep(10);
             }
             Console.WriteLine();
         }
 
         Console.ForegroundColor = ConsoleColor.DarkBlue;
-        Console.Write("   Player field");
+        Console.Write(" Player 1 field");
         Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("              Enemy field");
-        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("          Player 2 field");
     }
 
-    private void TryPlayerAttack(char[,] secondField)
+    private void CurrentPlayerTurn((int, int, char[,], char[,]) fieldParams)
     {
-        var coordinates = CalculateCoordinates();
-        int x = coordinates.Item1;
-        int y = coordinates.Item2;
+        if(currentPlayer % 2 == 0)
+        {
+            Console.ForegroundColor = ConsoleColor.DarkBlue;
+            Console.WriteLine("              Player 1 Turn");
+            TryPlayer1Attack(fieldParams.Item4);
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("              Player 2 Turn");
+            TryPlayer2Attack(fieldParams.Item3);
+        }
+
+        currentPlayer++;
+    }
+
+    private void UpdateFields((int, int, char[,], char[,]) fieldParams)
+    {
+        Console.Clear();
+        DrawFields(fieldParams.Item1, fieldParams.Item2, fieldParams.Item3, fieldParams.Item4, false);
+    }
+
+    private void TryPlayer1Attack(char[,] secondField)
+    {
+        int x = CalculateX();
+        int y = CalculateY();
 
         if (secondField[x, y] is '■')
         {
@@ -170,31 +148,57 @@ public class Game
         }
     }
 
-    private (int, int) CalculateCoordinates()
+    private void TryPlayer2Attack(char[,] firstField)
     {
-        char[] letters =
-        {
-                'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j'
-            };
-        char[] capitalLetters =
-        {
-                'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'
-            };
+        Random rnd = new Random();
 
-        int x = 0;
+        Thread.Sleep(rnd.Next(1000, 5000));
+
+        int x = rnd.Next(3, 13);
+        int y = rnd.Next(2, 12);
+
+        if (firstField[x, y] == '■')
+        {
+            firstField[x, y] = 'X';
+            firstCounter -= 1;
+        }
+        else if (firstField[x, y] == ' ')
+        {
+            firstField[x, y] = '·';
+        }
+    }
+
+    private bool isEndGame()
+    {
+        if (firstCounter is 0) 
+        {
+            EndGame("Player 2", ConsoleColor.Red);
+            return true;
+        }
+        else if (secondCounter is 0)
+        {
+            EndGame("Player 1", ConsoleColor.DarkBlue);
+            return true;
+        }
+        return false;
+    }
+
+    private void EndGame(string winner, ConsoleColor color)
+    {
+        Console.Clear();
+        Console.ForegroundColor = color;
+        Console.WriteLine(winner + " wins!");
+    }
+
+    private int CalculateX()
+    {
+        int x;
 
         Console.WriteLine("\n" + "Write the coordinate of X (A, B, C, D, E ... J)");
 
         do
         {
-            var inputX = Console.ReadLine();
-            for (int i = 0; i < letters.Length; i++)
-            {
-                //if (inputX.ToString() is letters[i].ToString() or capitalLetters[i].ToString())
-                // {
-                //    x = i + 1;
-                // }
-            }
+            x = Input(xKeysArray);
 
             if (x == 0)
             {
@@ -203,80 +207,40 @@ public class Game
 
         } while (x == 0);
 
+        return x + 2;
+    }
 
-        int y = 0;
+    private int CalculateY()
+    {
+        int y;
 
         Console.WriteLine("\n" + "Write the coordinate of Y (1, 2, 3, 4, 5 ... 10)");
 
         do
         {
-            var inputY = Console.ReadLine();
-
-            if (Int32.TryParse(inputY, out int Y))
-            {
-                if (Int32.Parse(inputY) > 0 && Int32.Parse(inputY) <= 10)
-                {
-                    y = Int32.Parse(inputY);
-                }
-            }
+            y = Input(yKeysArray);
 
             if (y == 0)
             {
                 Console.WriteLine("Wrong, try again!");
             }
+
         } while (y == 0);
 
-        var coordinates = (x + 3, y + 1);
-        return coordinates;
+        return y + 1;
     }
 
-    private void TryEnemyAttack(char[,] firstField)
+    private int Input(ConsoleKey[] keysArray)
     {
-        Random rnd = new Random();
-        bool isRepiating = false;
-        Thread.Sleep(rnd.Next(1000, 5000));
-        do
+        var input = Console.ReadKey();
+
+        for (int i = 0; i < keysArray.Length; i++)
         {
-            int x = rnd.Next(4, 14);
-            int y = rnd.Next(2, 12);
-
-            if (firstField[x, y] == '■')
+            if (input.Key == keysArray[i])
             {
-                firstField[x, y] = 'X';
-                firstCounter -= 1;
-                isRepiating = false;
+                return i + 1;
             }
-            else if (firstField[x, y] == ' ')
-            {
-                firstField[x, y] = '·';
-                isRepiating = false;
-            }
-            else if (firstField[x, y] == '·' || firstField[x, y] == 'X')
-            {
-                isRepiating = true;
-            }
-        } while (isRepiating);
-    }
-
-    private void PlayerTurn((int, int, char[,], char[,]) fieldParams)
-    {
-        Console.Clear();
-        DrawFields(fieldParams.Item1, fieldParams.Item2, fieldParams.Item3, fieldParams.Item4, false);
-        Console.ForegroundColor = ConsoleColor.DarkBlue;
-        Console.WriteLine("                Player Turn");
-
-        TryPlayerAttack(fieldParams.Item4);
-    }
-
-    private void EnemyTurn((int, int, char[,], char[,]) fieldParams)
-    {
-        Console.Clear();
-        DrawFields(fieldParams.Item1, fieldParams.Item2, fieldParams.Item3, fieldParams.Item4, false);
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine("                 Enemy Turn");
-
-        TryEnemyAttack(fieldParams.Item3);
+        }
+        return 0;      
     }
 }
-
-
