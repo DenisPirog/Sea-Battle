@@ -19,8 +19,8 @@ public class Game
             "10 #          #",
             "   ############",
         };
-    static private int firstCounter = 10;
-    static private int secondCounter = firstCounter;
+    private int firstCounter = 10;
+    private int secondCounter = 10;
 
     public void GameLoop()
     {
@@ -278,4 +278,5 @@ public class Game
         TryEnemyAttack(fieldParams.Item3);
     }
 }
+
 
