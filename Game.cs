@@ -53,7 +53,7 @@ public class Game
         Thread.Sleep(10);
         secondField = GenerateShips(secondField);
 
-        DrawFields(fieldHeight, fieldWidth, firstField, secondField, true);
+        DrawFields(fieldHeight, fieldWidth, firstField, secondField, false);
 
         return (fieldHeight, fieldWidth, firstField, secondField);
     }
@@ -134,8 +134,8 @@ public class Game
 
     private void TryPlayer1Attack(char[,] secondField)
     {
-        int x = CalculateX();
-        int y = CalculateY();
+        int x = CalculateAxis("\n" + "Write the coordinate of X (A, B, C, D, E ... J)", xKeysArray);
+        int y = CalculateAxis("\n" + "Write the coordinate of Y (1, 2, 3, 4, 5 ... 10)", yKeysArray) - 1;
 
         if (secondField[x, y] is '■')
         {
@@ -190,44 +190,24 @@ public class Game
         Console.WriteLine(winner + " wins!");
     }
 
-    private int CalculateX()
+    private int CalculateAxis(string massage, ConsoleKey[] keysArray)
     {
-        int x;
+        Console.WriteLine(massage);    
 
-        Console.WriteLine("\n" + "Write the coordinate of X (A, B, C, D, E ... J)");
+        int a;
 
         do
         {
-            x = Input(xKeysArray);
+            a = Input(keysArray);
 
-            if (x == 0)
+            if (a == 0)
             {
                 Console.WriteLine("Wrong, try again!");
             }
 
-        } while (x == 0);
+        } while (a == 0);
 
-        return x + 2;
-    }
-
-    private int CalculateY()
-    {
-        int y;
-
-        Console.WriteLine("\n" + "Write the coordinate of Y (1, 2, 3, 4, 5 ... 10)");
-
-        do
-        {
-            y = Input(yKeysArray);
-
-            if (y == 0)
-            {
-                Console.WriteLine("Wrong, try again!");
-            }
-
-        } while (y == 0);
-
-        return y + 1;
+        return a + 2;
     }
 
     private int Input(ConsoleKey[] keysArray)
