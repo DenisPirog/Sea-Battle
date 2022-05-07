@@ -3,14 +3,6 @@ using System.Threading;
 
 namespace Sea_Battle
 {
-    class Player
-    {
-        public int shipCount = 10;
-        public char[,] field = new char[14,14];
-        public bool isBot = false;
-        public bool isCurrent = false;
-    }
-
     public class Game
     {
         private char[,] field =
@@ -232,7 +224,7 @@ namespace Sea_Battle
         {
             Console.WriteLine(massage);
 
-            int a;
+            int a = -1;
 
             do
             {
