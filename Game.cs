@@ -224,7 +224,7 @@ namespace Sea_Battle
         {
             Console.WriteLine(massage);
 
-            int a = -1;
+            int a;
 
             do
             {
