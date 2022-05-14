@@ -22,7 +22,11 @@ namespace Sea_Battle
             {'J', '#', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '#'},
             {' ', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#', '#'},
         };
-        
+
+        private int gameMode;
+        private int numbeOfRounds;
+        private int numberOfShips = 10;
+
         private Player player1 =  new Player();
         private Player player2 = new Player();
 
@@ -34,21 +38,37 @@ namespace Sea_Battle
             do Console.Clear();
             while (isGameModeSelected() == false);
 
-            var fieldParams = CreateFields();
+            do Console.Clear();
+            while (isNumberOfRoundSelected() == false);
 
-            Player currentPlayer = player1;
-            Player notCurrentPlayer = player2;
-
-            while (!isEndGame())
+            do
             {
-                UpdateFields(fieldParams.Item1, fieldParams.Item2, fieldParams.Item3, fieldParams.Item4, currentPlayer);
-                bool isHit = CurrentPlayerTurn(currentPlayer, notCurrentPlayer);
-                if (!isHit)
+                if(gameMode != 4) DrawMassage("Starting new round...", 2000);
+
+                player1.SetDefaultValues(numberOfShips);
+                player2.SetDefaultValues(numberOfShips);
+
+                var fieldParams = CreateFields();
+
+                Player currentPlayer = player1;
+                Player notCurrentPlayer = player2;
+
+                while (!isRoundEnd())
                 {
-                    (currentPlayer, notCurrentPlayer) = (notCurrentPlayer, currentPlayer);
-                }
-                Console.Clear();
-            }       
+                    UpdateFields(fieldParams.Item1, fieldParams.Item2, fieldParams.Item3, fieldParams.Item4, currentPlayer);
+                    bool isHit = CurrentPlayerTurn(currentPlayer, notCurrentPlayer);
+                    if (!isHit)
+                    {
+                        (currentPlayer, notCurrentPlayer) = (notCurrentPlayer, currentPlayer);
+                        if(gameMode == 2)
+                        {
+                            DrawMassage("Changing player...", 2000);
+                        }
+                    }
+                    Console.Clear();
+                }               
+            }
+            while (!isGameEnd());
         }
 
         private bool isGameModeSelected()
@@ -56,7 +76,8 @@ namespace Sea_Battle
             Console.WriteLine("Press: ");
             Console.WriteLine("1 - Player vs AI");
             Console.WriteLine("2 - Player vs Player");
-            Console.WriteLine("3 - AI vs AI");           
+            Console.WriteLine("3 - AI vs AI");
+            Console.WriteLine("4 - Debug mode");
 
             var input = Console.ReadKey();
 
@@ -65,19 +86,43 @@ namespace Sea_Battle
                 case ConsoleKey.D1:
                     player1.isBot = false;
                     player2.isBot = true;
+                    gameMode = 1;
                     return true;
 
                 case ConsoleKey.D2:
                     player1.isBot = false;
                     player2.isBot = false;
+                    gameMode = 2;
                     return true;
 
                 case ConsoleKey.D3:
                     player1.isBot = true;
                     player2.isBot = true;
+                    gameMode = 3;
+                    return true;
+
+                case ConsoleKey.D4:
+                    player1.isBot = false;
+                    player2.isBot = true;
+                    gameMode = 4;
+                    numberOfShips = 2;
                     return true;
             }
 
+            return false;
+        }
+
+        private bool isNumberOfRoundSelected()
+        {
+            Console.Write("Number of rounds:");
+
+            var input = Console.ReadLine();
+
+            if (int.TryParse(input, out int result))
+            {
+                numbeOfRounds = int.Parse(input);
+                return true;
+            }
             return false;
         }
 
@@ -100,7 +145,7 @@ namespace Sea_Battle
         }
 
         private void GenerateShips(char[,] field)
-        {
+        {   
             Random rnd = new Random();
 
             int boatCounter = 0;
@@ -132,6 +177,8 @@ namespace Sea_Battle
             Console.Write(" Player 1 field");
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine("          Player 2 field");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"                  { player1.score}:{player2.score}");
         }
 
         private void DrawLine(int j, int fieldWidth, char[,] field, bool isShow, Player player)
@@ -169,38 +216,30 @@ namespace Sea_Battle
         private void UpdateFields(int fieldHeight, int fieldWidth, char[,] firstField, char[,] secondField, Player currentPlayer)
         {
             Console.Clear();
-            if (player1.isBot && player2.isBot)
-            {
-                DrawFields(fieldHeight, fieldWidth, firstField, secondField, true, true);
-            }
-            else if (!player1.isBot && player2.isBot)
+            if (gameMode == 1)
             {
                 DrawFields(fieldHeight, fieldWidth, firstField, secondField, true, false);
             }
-            else if (!player1.isBot && !player2.isBot)
+            else if (gameMode == 2)
             {
-                DrawFields(fieldHeight, fieldWidth, firstField, secondField, player1 == currentPlayer, player2 == currentPlayer);
-            }          
+                DrawFields(fieldHeight, fieldWidth, firstField, secondField, player1 == currentPlayer, player2 == currentPlayer);               
+            }
+            else if (gameMode == 3)
+            {
+                DrawFields(fieldHeight, fieldWidth, firstField, secondField, true, true);
+            }
+            else if (gameMode == 4)
+            {
+                DrawFields(fieldHeight, fieldWidth, firstField, secondField, true, true);
+            }
         }
 
         private bool TryPlayerAttack(Player notCurrentPlayer)
         {           
             int x = CalculateAxis("\n" + "Write the coordinate of X (A, B, C, D, E ... J)", xKeysArray);
             int y = CalculateAxis("\n" + "Write the coordinate of Y (1, 2, 3, 4, 5 ... 0)", yKeysArray);
-            
-            if (notCurrentPlayer.logicField[x, y] is '■')
-            {
-                notCurrentPlayer.logicField[x, y] = 'X';
-                notCurrentPlayer.shipCount -= 1;
-                return true;
-            }
-            else if (notCurrentPlayer.logicField[x, y] is ' ')
-            {
-                notCurrentPlayer.logicField[x, y] = '·';
-                return false;
-            }
 
-            return false;
+            return notCurrentPlayer.Attack(x, y);
         }
 
         private bool TryBotAttack(Player notCurrentPlayer)
@@ -212,39 +251,28 @@ namespace Sea_Battle
             int x = rnd.Next(0, 10);
             int y = rnd.Next(0, 10);
 
-            if (notCurrentPlayer.logicField[x, y] == '■')
-            {
-                notCurrentPlayer.logicField[x, y] = 'X';
-                notCurrentPlayer.shipCount -= 1;
-                return true;
-            }
-            else if (notCurrentPlayer.logicField[x, y] == ' ')
-            {
-                notCurrentPlayer.logicField[x, y] = '·';
-                return false;
-            }
-
-            return false;
+            return notCurrentPlayer.Attack(x, y);
         }
 
         private int CalculateAxis(string massage, ConsoleKey[] keysArray)
         {
             Console.WriteLine(massage);
 
-            int a = -1;
+            int input;
 
             do
             {
-                a = Input(keysArray);
+                input = Input(keysArray);
 
-                if (a == -1)
+                if (input == -1)
                 {
+                    Console.WriteLine("");
                     Console.WriteLine("Wrong, try again!");
                 }
 
-            } while (a == -1);
+            } while (input == - 1);
 
-            return a;
+            return input;
         }
 
         private int Input(ConsoleKey[] keysArray)
@@ -258,29 +286,58 @@ namespace Sea_Battle
                     return i;
                 }
             }
-            return 0;
+            return -1;
         }
 
-        private bool isEndGame()
+        private bool isRoundEnd()
         {
             if (player1.shipCount == 0)
             {
-                GameResult("Player 2", ConsoleColor.Red);
+                player2.score += RoundResult("Player 2");
                 return true;
             }
             else if (player2.shipCount == 0)
             {
-                GameResult("Player 1", ConsoleColor.DarkBlue);
+                player1.score += RoundResult("Player 1");
                 return true;
             }
             return false;
         }
 
-        private void GameResult(string winner, ConsoleColor color)
+        private int RoundResult(string winner)
+        {
+            DrawMassage(winner + " won the round!", 1000);
+            return 1;
+        }      
+
+        private bool isGameEnd()
+        {
+            if (player1.score == numbeOfRounds)
+            {
+                GameResult(player1.color, "Player 1");
+                return true;
+            }
+            else if (player2.score == numbeOfRounds)
+            {
+                GameResult(player2.color, "Player 2");
+                return true;
+            }
+            return false;
+        }
+
+        private void GameResult(ConsoleColor color, string winner)
         {
             Console.Clear();
             Console.ForegroundColor = color;
             Console.WriteLine(winner + " wins!");
-        }      
+        }
+
+        private void DrawMassage(string msg, int time)
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(msg);
+            Thread.Sleep(time);
+        }
     }
 }
